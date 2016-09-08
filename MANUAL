@@ -1,0 +1,21 @@
+*Welcome to SimplePaint* by Chris Findeisen.
+This simple application allows the user to draw on the screen with a mouse and control settings with the keyboard. Clicking the mouse will begin drawing.
+
+*Keyboard Controls*
+'+' and '-' decrease the size of the brush.
+Keys '1'-'7' will change the color of the brush such that 1=red, 2=green, 3=yellow, 4=blue, ..., 7=white.
+'b' cycles through the different brushes
+'r' rotates the brush
+'a' toggles the circle brush's spray paint mode
+'c' clears the screen
+'q' quits the application
+
+
+
+Official Instructions for reference
+Remove the drawing code from the display function and make the program draw a rectangle from (-size, -size) to (size,size) centered at the current mouse position as the user drags the mouse (with a button clicked) across the screen. size is a variable that that user can increase by a factor of 2 by pressing '+' or decrease by a factor of 2 by pressing '-'. size should also be restricted to lie in the range [1,128].
+Allow the user to change the color of the polygon being drawn by pressing keys 1-7. The low order bit of the number should go in the red component, the middle bit in the green component and the high bit in the blue component. Therefore, 1=red, 2=green, 3=yellow, 4=blue, ..., 7=white.
+Allow the user to clear the screen to black by pressing 'c'. When your program first starts up, it does not matter what the screen contains since the user can clear it by pressing 'c'.
+Add multiple brushes that the user can cycle through by pressing 'b' repeatedly. You should start with the quad brush. The next brush should be a triangle with vertices (-size, -size), (size, -size), (0, size). The following brush will be a line brush with vertices (0,-size), (0,size). The final brush will be a circle brush with radius size.
+Since all of the brushes except the circle have an orientation, allow the user to change this orientation by pressing 'r' to rotate the brush about the center of the mouse by an additional 10 degrees. Hence, pressing 'r' once would create a rotation of 10 degrees for the quad, triangle and line brushes. Pressing 'r' again would create a rotation of 20 degrees and so forth.
+EXTRA CREDIT: Allow the user to press 'a' to toggle the circle brush between the solid circle and the spray paint brush demonstrated in class that blends with the drawing on the screen.
