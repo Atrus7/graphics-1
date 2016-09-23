@@ -1,0 +1,169 @@
+#ifdef __APPLE__
+#  include <OpenGL/gl.h>
+#  include <OpenGL/glu.h>
+#  include <GLUT/glut.h>
+#else
+#  include <GL/gl.h>
+#  include <GL/glut.h>
+#endif/*__APPLE__*/
+#include "Edge.h"
+#include <iostream>
+#include "Painter.h"
+
+/******************************************************************
+	(Notes):
+	Image size is 400 by 400 by default.  You may adjust this if
+		you want to.
+	You can assume the window will NOT be resized.
+	Call clearFramebuffer to clear the entire framebuffer.
+	Call setFramebuffer to set a pixel.  This should be the only
+		routine you use to set the color (other than clearing the
+		entire framebuffer).  drawit() will cause the current
+		framebuffer to be displayed.
+	As is, your scan conversion should probably be called from
+		within the display function.  There is a very short sample
+		of code there now.
+	You may add code to any of the subroutines here,  You probably
+		want to leave the drawit, clearFramebuffer, and
+		setFramebuffer commands alone, though.
+  *****************************************************************/
+
+const int ImageW = 400;
+const int ImageH = 400;
+
+float framebuffer[ImageH][ImageW][3];
+Painter painter(Point(ImageW, ImageH));
+
+// Draws the scene
+void drawit(void)
+{
+   glDrawPixels(ImageW,ImageH,GL_RGB,GL_FLOAT,framebuffer);
+}
+
+// Clears framebuffer to black
+void clearFramebuffer()
+{
+	int i,j;
+
+	for(i=0;i<ImageH;i++) {
+		for (j=0;j<ImageW;j++) {
+			framebuffer[i][j][0] = 0.0;
+			framebuffer[i][j][1] = 0.0;
+			framebuffer[i][j][2] = 0.0;
+		}
+	}
+}
+
+// Sets pixel x,y to the color RGB
+// I've made a small change to this function to make the pixels match
+// those returned by the glutMouseFunc exactly - Scott Schaefer
+void setFramebuffer(int x, int y, float R, float G, float B)
+{
+	// changes the origin from the lower-left corner to the upper-left corner
+	y = ImageH - 1 - y;
+	if (R<=1.0)
+		if (R>=0.0)
+			framebuffer[y][x][0]=R;
+		else
+			framebuffer[y][x][0]=0.0;
+	else
+		framebuffer[y][x][0]=1.0;
+	if (G<=1.0)
+		if (G>=0.0)
+			framebuffer[y][x][1]=G;
+		else
+			framebuffer[y][x][1]=0.0;
+	else
+		framebuffer[y][x][1]=1.0;
+	if (B<=1.0)
+		if (B>=0.0)
+			framebuffer[y][x][2]=B;
+		else
+			framebuffer[y][x][2]=0.0;
+	else
+		framebuffer[y][x][2]=1.0;
+}
+
+void display(void)
+{
+  cout << "Hello0";
+	// should not be necessary but some GPUs aren't displaying anything until a clear call.
+	glClear ( GL_COLOR_BUFFER_BIT );
+
+	//The next two lines of code are for demonstration only.
+	//They show how to draw a line from (0,0) to (100,100)
+
+	//int i;
+  queue<ColoredEdge> scan_lines = painter.draw_polygons();
+
+	while(!scan_lines.empty()) {
+    ColoredEdge ce = scan_lines.front();
+    Edge e = ce.edge;
+    int y = e.get_start().y; //horizontal, won't matter
+    scan_lines.pop();
+    for(int i= e.get_start().x; i < e.get_end().x; ++i){
+      setFramebuffer(i,y,1.0,1.0,1.0);
+    }
+  }
+
+	drawit();
+	glFlush ( );
+}
+
+void mouse_click_event(int button, int state, int x, int y ){
+  cout << "Mouse click";
+    if(state == GLUT_DOWN){
+      if(button == GLUT_LEFT_BUTTON){
+        cout << "Handle left press";
+        painter.handle_left_press(x, y);
+      } else if(button == GLUT_RIGHT_BUTTON){
+        cout << "Handle right press";
+        painter.handle_right_press(x, y);
+      }
+    } else if(state == GLUT_UP && button == GLUT_LEFT_BUTTON) {
+      cout << "Handle left release";
+      painter.handle_left_release(x, y);
+    } else {
+      //unrecognized mouse event.
+    }
+  }
+
+void keyboard_event ( unsigned char key, int x, int y )
+{
+  cout << "Keyboard event";
+  painter.handle_key_press(key);
+}
+
+void init(void)
+{
+  gluOrtho2D ( 0, ImageW - 1, ImageH - 1, 0 );
+  clearFramebuffer();
+}
+
+int main(int argc, char** argv)
+{
+  std::cout << "Hello";
+  std::cout << "Hello";
+  std::cout << "Hello";
+  std::cout << "Hello";
+  std::cout << "Hello";
+  std::cout << "Hello";
+  std::cout << "Hello";
+  glutInit(&argc,argv);
+  glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
+  std::cout << "Hello";
+  glutInitWindowSize(ImageW,ImageH);
+  std::cout << "Hello";
+  glutInitWindowPosition(100,100);
+  std::cout << "Hello";
+  glutCreateWindow("Christopher Findeisen - Homework 2");
+  std::cout << "Hello";
+  init();
+  std::cout << "Hello";
+  glutDisplayFunc(display);
+  //glutMouseFunc(mouse_click_event);
+  //glutKeyboardFunc(keyboard_event);
+  glutMainLoop();
+  return 0;
+}
+
