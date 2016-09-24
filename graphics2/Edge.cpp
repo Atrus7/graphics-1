@@ -18,6 +18,9 @@ float Edge::calc_current_x(int currentY) const {
   if(currentY < get_low().y){
     throw("Bad update of line");
   }
+  if(get_start().x == get_end().x){
+    return get_start().x;
+  }
   float result = get_low().x + (currentY - get_low().y)/slope;
   return result;
 }

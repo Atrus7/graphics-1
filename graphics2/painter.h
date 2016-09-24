@@ -25,6 +25,7 @@ struct ColoredEdge {
 class Painter {
   // window edges
   Point clip_tl, clip_br;
+  const Point win_br;
 
   std::vector<Polygon> polys;
   std::vector<Polygon> clipped_polys;
@@ -32,6 +33,7 @@ class Painter {
 
   // 0 means not clipping, 1 means currently getting clipping rectangle, 2 means done clipping
   int clipping_mode;
+  void clip();
 public:
   explicit Painter(Point window_bottom_right);
   void set_tl_clipping(Point clip_point){clip_tl = clip_point;}

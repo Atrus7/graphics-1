@@ -2,6 +2,7 @@
 #define POLYGON_H
 #include "Edge.h"
 #include <vector>
+#include <deque>
 #include <map>
 #include <iostream>
 #include <list>
@@ -9,23 +10,27 @@
 using namespace std;
 class Polygon;
 
+enum ClipCase {IN, OUT, IN_OUT, OUT_IN};
 enum RectEdge{ TOP, RIGHT, BOTTOM, LEFT};
 class Clipper {
-  Edge rect_edges[4];
   Point min, max;
 
 public:
-  Clipper(Point tl, Point br) :rect_edges({
-      Edge(tl, Point(br.x, tl.y)),
-        Edge(Point(br.x, tl.y), br),
-        Edge(br, Point(tl.x, br.y)),
-        Edge(Point(tl.x, br.y), tl)
-        }
-    ){}
+  Clipper(Point tl, Point br): min(tl), max(br)
+  //Edge rect_edges[4];
+//        rect_edges({
+//         Edge(tl, Point(br.x, tl.y)),
+//         Edge(Point(br.x, tl.y), br),
+//         Edge(br, Point(tl.x, br.y)),
+//         Edge(Point(tl.x, br.y), tl)
+//         }),
+  {
+  }
 
   //does sutherland hodgeman
   Polygon clip_polygon(const Polygon& p1);
   vector<Point> in_out_converter(Edge e, RectEdge r);
+  ClipCase in_out_determinator(Edge e, RectEdge r);
 };
 
 struct Color {
@@ -41,11 +46,13 @@ class Polygon {
   // expecting a sparse table(<= 10 polys), so just use a map from
   // y -> list of edges starting at y
   map<int, list<Edge> > active_edge_table;
-  const Color color;
+  vector<Point> vertices;
+  Color color;
 
 public:
   list<Edge> get_edges_starting_at(int line);
   list<Edge> get_edges_ending_at(int line);
+  void set_color(Color c) { color = c; }
   Color get_color() const {
     return color;
   }
@@ -62,7 +69,6 @@ public:
       }
     }
   }
-
 
   class Builder {
     vector<Point> points;

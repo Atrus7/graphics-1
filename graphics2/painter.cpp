@@ -3,7 +3,7 @@
 #include <cmath>
 #include <iostream>
 
-Painter::Painter(Point window_bottom_right): clip_tl(0,0), clip_br(window_bottom_right.x, window_bottom_right.y), clipping_mode(false){
+Painter::Painter(Point window_bottom_right): clip_tl(0,0), clip_br(window_bottom_right.x, window_bottom_right.y), win_br(window_bottom_right.x, window_bottom_right.y), clipping_mode(false){
   Polygon::Builder b;
   b.add_point(Point(0,100));
   b.add_point(Point(50, 0));
@@ -30,11 +30,6 @@ vector<Edge> Painter::ActiveEdgeList::get_horizontals(int line) const{
       }
     }
     right_x = f_r_x;
-    if(right_x < 0) {
-      cout << "RIGHT X IS BAD" << endl;
-      Edge erx = active_edge_list[i+1];
-      cout << erx.get_start().x << ", " << erx.get_end().x  << endl;
-    }
     Edge horizontal(Point(left_x, line),
                     Point(f_r_x, line));
     horizontals.push_back(horizontal);
@@ -42,6 +37,27 @@ vector<Edge> Painter::ActiveEdgeList::get_horizontals(int line) const{
   return horizontals;
 }
 
+void Painter::clip(){
+
+  int min_x = std::min(clip_tl.x, clip_br.x);
+  int min_y = std::min(clip_tl.y, clip_br.y);
+  int max_x = std::max(clip_tl.x, clip_br.x);
+  int max_y = std::max(clip_tl.y, clip_br.y);
+  Point min = Point(min_x, min_y);
+  Point max = Point(max_x, max_y);
+
+  Clipper clipper(min, max);
+  for(int i=0; i < polys.size(); ++i){
+    Polygon p = clipper.clip_polygon(polys[i]);
+    p.set_color(polys[i].get_color());
+    if(clipped_polys.size() > i){
+      clipped_polys[i] = p;
+    }
+    else{
+      clipped_polys.push_back(p);
+    }
+  }
+}
 std::vector<Edge>& Painter::ActiveEdgeList::operator+=(const std::list<Edge>& l)
 {
   vector<Edge> &ael = active_edge_list; //for short
@@ -63,13 +79,19 @@ void Painter::ActiveEdgeList::remove_ending_at(int line){
 
 
 queue<ColoredEdge> Painter::draw_polygons() {
-  std::vector<Polygon> *poly_list = (clipping_mode)? &clipped_polys :  &polys;
+  std::vector<Polygon> *poly_list = (clipping_mode==2)? &clipped_polys :  &polys;
   queue<ColoredEdge> pixels_to_color;
-  const int height = clip_br.y;
-  const int width = clip_br.x;
+  const int height = win_br.y;
+  const int width = win_br.x;
+  if(clipping_mode == 2){
+    clip();
+  }
 
   for(Polygon p : *poly_list){
-    ActiveEdgeList ael; //active_edge_list
+    if(p.get_color().r == 1 &&  p.get_color().g == 1 && p.get_color().b == 1){
+      continue;
+    }
+    ActiveEdgeList ael;
 
     EdgeSorter es(0);
     for(int line=0; line < height; ++line){
@@ -78,17 +100,8 @@ queue<ColoredEdge> Painter::draw_polygons() {
       es.set_line(line);
 
       std::sort(ael.active_edge_list.begin(), ael.active_edge_list.end(), es);
-      if(ael.active_edge_list.size()){
-      std::cout << "AEL :[";
-      for(Edge e : ael.active_edge_list){
-        std::cout << e.calc_current_x(line) << "(" << e.get_start().x <<", "<< e.get_end().x <<")" << ", " ;
-        std::cout << std::endl;
-      }
-      std::cout << "]";
-      }
 
       if(ael.active_edge_list.size() > 0){
-        //std::cout << "Draw " << polys.size() << " polys with " << ael.active_edge_list.size() << std::endl;
         for(Edge e : ael.get_horizontals(line)){ // add horizontal lines
           pixels_to_color.push({e, p.get_color()});
         }
@@ -123,19 +136,21 @@ void Painter::handle_mouse_move(int x, int y){
 
 }
 void Painter::handle_right_press(int x, int y){
-  if(polys.size() > 9) {
-    return;
-  }
-  unfinished_poly.add_point(Point(x,y));
+  if(!clipping_mode){
+    if(polys.size() > 9) {
+      return;
+    }
+    unfinished_poly.add_point(Point(x,y));
 
-  try{
-    polys.push_back(unfinished_poly.build());
-  } catch(...){cout << "Build FAILED...\n";}// nothing, reset builder either way
-  unfinished_poly = Polygon::Builder();
+    try{
+      polys.push_back(unfinished_poly.build());
+    } catch(...){cout << "Build FAILED...\n";}// nothing, reset builder either way
+    unfinished_poly = Polygon::Builder();
+  }
 }
 void Painter::handle_key_press(unsigned char key){
   if(key == 'c' || key == 'C'){
-    toggle_clipping(2);
+    toggle_clipping(4);
   } else {
     // don't recognize
   }
@@ -149,6 +164,6 @@ void Painter::toggle_clipping(int i) {
     }
   }
 
-  clipping_mode = (clipping_mode)? 0 : 1;
+  clipping_mode = (clipping_mode)? 0 : i;
 }
 

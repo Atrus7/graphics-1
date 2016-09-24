@@ -89,6 +89,7 @@ void display(void)
 {
 	// should not be necessary but some GPUs aren't displaying anything until a clear call.
 	glClear ( GL_COLOR_BUFFER_BIT );
+  clearFramebuffer();
 
 	//The next two lines of code are for demonstration only.
 	//They show how to draw a line from (0,0) to (100,100)
@@ -96,7 +97,6 @@ void display(void)
 	//int i;
   queue<ColoredEdge> scan_lines = painter.draw_polygons();
 
-  if(painter.get_clipping() != 1){ // don't redraw if currently clipping
     while(!scan_lines.empty()) {
       ColoredEdge ce = scan_lines.front();
       Edge e = ce.edge;
@@ -104,11 +104,11 @@ void display(void)
       int sx = min(e.get_start().x, e.get_end().x);
       int ex = max(e.get_start().x, e.get_end().x);
       scan_lines.pop();
-      cout << "Setting from " << sx <<" to " << ex << endl;
       for(int i= sx; i < ex; ++i){
         setFramebuffer(i,y,ce.color.r,ce.color.g,ce.color.b);
       }
     }
+    if(painter.get_clipping() != 1){ // don't redraw if currently clipping
   }
   drawit();
   if(painter.get_clipping() == 1){
