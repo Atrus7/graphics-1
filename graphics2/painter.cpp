@@ -4,11 +4,6 @@
 #include <iostream>
 
 Painter::Painter(Point window_bottom_right): clip_tl(0,0), clip_br(window_bottom_right.x, window_bottom_right.y), win_br(window_bottom_right.x, window_bottom_right.y), clipping_mode(false){
-  Polygon::Builder b;
-  b.add_point(Point(0,100));
-  b.add_point(Point(50, 0));
-  b.add_point(Point(100, 100));
-  polys.push_back(b.build());
 }
 
 vector<Edge> Painter::ActiveEdgeList::get_horizontals(int line) const{
