@@ -50,6 +50,21 @@ public:
 
 typedef Pt Vec;
 
+//for randoms
+enum AffineTransformType {
+  ROTA, SCALE, NSCALE
+};
+struct AffineTransform {
+  AffineTransformType att;
+  float val;
+  Pt pt1, pt2;
+
+  AffineTransform(AffineTransformType _att, float _val, Pt _pt1):
+    att(_att), val(_val), pt1(_pt1){}
+  AffineTransform(AffineTransformType _att, float _val, Pt _pt1, Pt _pt2):
+    pt2(_pt2){AffineTransform(_att, _val, _pt1);}
+  Matrix execute();
+};
 
 /**
  * Constructs a matrix to translate by the vector "v"
@@ -99,6 +114,17 @@ void setCondensationSet ( vector<Pt> pts );
  * Sets the transformations for the current IAT.
  */
 void setIATTransformations ( vector<Matrix> transformations );
+
+vector<Pt>  applyIATTransformations(vector<Pt> pts);
+
+void fractalHangman();
+void fractalStaircase();
+void fractalSnowflake();
+void hexFlower();
+void myFractal1();
+void myFractal2();
+void printCurrentFractal();
+void myRandomFractalGenerator() ;
 
 
 /**
