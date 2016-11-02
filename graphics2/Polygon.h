@@ -16,15 +16,7 @@ class Clipper {
   Point min, max;
 
 public:
-  Clipper(Point tl, Point br): min(tl), max(br)
-  //Edge rect_edges[4];
-//        rect_edges({
-//         Edge(tl, Point(br.x, tl.y)),
-//         Edge(Point(br.x, tl.y), br),
-//         Edge(br, Point(tl.x, br.y)),
-//         Edge(Point(tl.x, br.y), tl)
-//         }),
-  {
+  Clipper(Point tl, Point br): min(tl), max(br) {
   }
 
   //does sutherland hodgeman
@@ -39,17 +31,16 @@ struct Color {
 
 //class to handle edges and scan line logic
 class Polygon {
-  friend class Clipper;
   Polygon(Color c): color(c){}; //use a builder
   void add_edge(int key, const Edge &e); // builder usage
 
   // expecting a sparse table(<= 10 polys), so just use a map from
   // y -> list of edges starting at y
   map<int, list<Edge> > active_edge_table;
-  vector<Point> vertices;
   Color color;
 
 public:
+  vector<Point> vertices;
   list<Edge> get_edges_starting_at(int line);
   list<Edge> get_edges_ending_at(int line);
   void set_color(Color c) { color = c; }
