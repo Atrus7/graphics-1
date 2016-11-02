@@ -62,7 +62,7 @@ struct AffineTransform {
   AffineTransform(AffineTransformType _att, float _val, Pt _pt1):
     att(_att), val(_val), pt1(_pt1){}
   AffineTransform(AffineTransformType _att, float _val, Pt _pt1, Pt _pt2):
-    pt2(_pt2){AffineTransform(_att, _val, _pt1);}
+    att(_att), val(_val), pt1(_pt1), pt2(_pt2){}
   Matrix execute();
 };
 

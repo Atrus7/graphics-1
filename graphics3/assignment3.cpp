@@ -4,6 +4,7 @@
 #  include <GLUT/glut.h>
 #else
 #  include <GL/gl.h>
+#  include <GL/glu.h>
 #  include <GL/glut.h>
 #endif/*__APPLE__*/
 #include <cmath>
@@ -90,35 +91,42 @@ Matrix image ( Pt p1, Pt p2, Pt p3, Pt q1, Pt q2, Pt q3 )
 {
   Matrix rvalue;
 
-	Matrix transformed; //points after transformation
-	transformed.data[0][0] = q1.x;
-	transformed.data[0][1] = q2.x;
-	transformed.data[0][2] = q3.x;
+	Matrix transform_matrix;
+	transform_matrix.data[0][0] = q1.x;
+	transform_matrix.data[0][1] = q2.x;
+	transform_matrix.data[0][2] = q3.x;
 
-	transformed.data[1][0] = q1.y;
-	transformed.data[1][1] = q2.y;
-	transformed.data[1][2] = q3.y;
+	transform_matrix.data[1][0] = q1.y;
+	transform_matrix.data[1][1] = q2.y;
+	transform_matrix.data[1][2] = q3.y;
 
-	transformed.data[2][0] = 0;
-	transformed.data[2][1] = 0;
-	transformed.data[2][2] = 1;
+	transform_matrix.data[2][0] = 0;
+	transform_matrix.data[2][1] = 0;
+	transform_matrix.data[2][2] = 1;
 
-	Matrix beforeInverse; //points before transformation but the inverse of the matrix;
-	float c = 1 / (-(p2.x * p1.y) + p3.x * p1.y + p1.x * p2.y - p3.x * p2.y - p1.x * p3.y + p2.x * p3.y);
+	Matrix pre_inverse;
 
-	beforeInverse.data[0][0] = (p2.y - p3.y) * c;
-	beforeInverse.data[0][1] = (p3.x - p2.x) * c;
-	beforeInverse.data[0][2] = (p2.x * p3.y - p3.x * p2.y) * c;
+	pre_inverse.data[0][0] = (p2.y - p3.y);
+	pre_inverse.data[0][1] = (p3.x - p2.x);
+	pre_inverse.data[0][2] = (p2.x * p3.y - p3.x * p2.y);
 
-	beforeInverse.data[1][0] = (p3.y - p1.y) * c;
-	beforeInverse.data[1][1] = (p3.x - p1.x) * c;
-	beforeInverse.data[1][2] = (p3.x * p1.y - p1.x * p3.y) * c;
+	pre_inverse.data[1][0] = (p3.y - p1.y);
+	pre_inverse.data[1][1] = (p3.x - p1.x);
+	pre_inverse.data[1][2] = (p3.x * p1.y - p1.x * p3.y);
 
-	beforeInverse.data[2][0] = (p1.y - p2.y) * c;
-	beforeInverse.data[2][1] = (p1.x - p1.x) * c;
-	beforeInverse.data[2][2] = (p1.x * p2.y - p2.x * p1.y) * c;
+	pre_inverse.data[2][0] = (p1.y - p2.y);
+	pre_inverse.data[2][1] = (p1.x - p1.x);
+	pre_inverse.data[2][2] = (p1.x * p2.y - p2.x * p1.y);
 
-	rvalue = compose(transformed, beforeInverse);
+	float z = 1 / (-(p2.x * p1.y) + p3.x * p1.y + p1.x * p2.y - p3.x * p2.y - p1.x * p3.y + p2.x * p3.y);
+
+  for(int i=0; i < 3; ++i){
+    for(int j=0; j < 3; ++j){
+      pre_inverse.data[i][j] *= z;
+    }
+  }
+
+	rvalue = compose(transform_matrix, pre_inverse);
 
 
 
@@ -179,11 +187,11 @@ vector<vector<Pt> >  applyIATTransformations(vector<vector<Pt> > shapes){
 
 void fractalHangman(){
   vector<Matrix> iat;
-  iat.push_back ( scale ( Pt ( -.9, -.9 ), 0.5 ) );
-  iat.push_back ( scale ( Pt ( 0, -.9 ), 0.5 ) );
+  iat.push_back ( scale ( Pt ( .5, -.5 ), 0.5 ) );
+  iat.push_back ( scale ( Pt ( -.5, -.5 ), 0.5 ) );
   iat.push_back(compose (
-                         scale ( Pt (- .9, .9 ), 0.5 ),
-                         rotate(Pt(-.9, -.9), -90) )
+                         scale ( Pt (- .5, .5 ), 0.5 ),
+                         rotate(Pt(0, 0), -90) )
                 );
 
   setIATTransformations ( iat );
@@ -226,7 +234,7 @@ void hexFlower(){
   vector<Matrix> iat;
   for(int i=0; i < 6; ++i){
     float angle =  (360 + (60 * i)) * (PI / 180);
-    iat.push_back (scale ( Pt (0.9 * cos(angle), 0.9 * sin(angle)), 0.5 ));
+    iat.push_back (scale ( Pt (0.9 * cos(angle), 0.9 * sin(angle)), 0.34 ));
   }
 
   setIATTransformations ( iat );
@@ -275,6 +283,7 @@ void printCurrentFractal(){
     if(NSCALE){
       printf(", Pt(%f, %f)", atm.pt2.x, atm.pt2.y);
     }
+    printf("\n==================================\n\n");
   }
 }
 
@@ -288,45 +297,203 @@ Matrix AffineTransform::execute(){
   else if(att == NSCALE){
     return nscale(pt1, pt2, val);
   }
-  throw("Bad ATType");
+  else{
+    cout  << "bad attype" << att << endl;
+    throw("Bad ATType");
+  }
 }
 
 //random fractal generator
 void myRandomFractalGenerator() {
-    int transformation_count = (rand() % 3) + 2; //between 3 and 5
+  RATTransformation.clear();
+    int transformation_count = (rand() % 6) + 4; //between 3 and 5
     vector<Matrix> iat;
 
 
     for(int i=0; i < transformation_count; ++i){
-      bool compose_transformation = rand() % 2;
       int rand_transformation = rand() % 3;
-      if(rand_transformation)
+      int val;
 
 
-      Matrix m1 = 
-      // if(compose_transformation){
-      // }
+      AffineTransform* affineTransformation;
+
+      if(rand_transformation == 0){//rotate
+        int val = rand() % 360;
+        float rand_pt_x = (rand() % 200 / 100.0) -1;
+        float rand_pt_y= (rand() % 200 / 100.0) -1;
+        affineTransformation = new AffineTransform(ROTA, val, Pt(rand_pt_x, rand_pt_y));
+      }
+      else if(rand_transformation == 1){
+        int val = (rand() % 100) / 100.0;
+        float rand_pt_x = ((rand() % 200) / 100.0) -1;
+        float rand_pt_y= ((rand() % 200) / 100.0) -1;
+        affineTransformation = new AffineTransform(SCALE, val, Pt(rand_pt_x, rand_pt_y));
+      }
+      else if(rand_transformation == 2){
+        int val = rand() % 100 / 100.0;
+        float rand_pt_x = ((rand() % 200) / 100.0) -1;
+        float rand_pt_y= ((rand() % 200) / 100.0) -1;
+        float nscale_pt_x = ((rand() % 200) / 100.0) -1;
+        float nscale_pt_y= ((rand() % 200) / 100.0) -1;
+        affineTransformation = new AffineTransform(NSCALE, val, Pt(rand_pt_x, rand_pt_y), Pt(nscale_pt_x, nscale_pt_y));
+      }
+      else{
+        cout  << "bad random" << rand_transformation << endl;
+        throw("bad random");
+      }
+
+      RATTransformation.push_back(*affineTransformation);
+      Matrix m1 = affineTransformation->execute();
+
+      iat.push_back(m1);
     }
 
-    rand() % 100;
-    iat.push_back(scale ( Pt (-.9 , 0 ), 0.33 ));
+    setIATTransformations(iat);
+    vector<Pt> pts;
+    setCondensationSet (pts);
 }
 
 void myFractal2(){
+  vector<Matrix> iat;
 
-  // iat.push_back(scale ( Pt (-.9 , 0 ), 0.33 ));
-  // iat.push_back(scale ( Pt (.9 , 0 ), 0.33 ));
-  // iat.push_back(compose (
-  //                        scale ( Pt (0.0 , 0 ), 0.33 ),
-  //                        rotate(Pt(0, 0), -60) )
-  //               );
-  // iat.push_back(compose (
-  //                        scale ( Pt (0.0 , 0 ), 0.33 ),
-  //                        rotate(Pt(0, 0), 60) )
-  //               );
-  // setIATTransformations(iat);
-  // vector<Pt> pts;
-  // setCondensationSet (pts);
+// 	 Rotation Transformation 
+// Values: 296.000000, Pt(0.760000, -0.530000), Pt(0.000000, 0.000000)
+// ==================================
+
+// 	 Rotation Transformation 
+// Values: 351.000000, Pt(0.040000, 0.180000), Pt(0.000000, 0.000000)
+// ==================================
+
+// 	 Non-uniform Scale Transformation 
+// Values: 0.000000, Pt(-0.800000, -0.580000), Pt(0.000000, 0.000000)
+// ==================================
+
+// 	 Rotation Transformation 
+// Values: 104.000000, Pt(0.650000, -0.300000), Pt(0.000000, 0.000000)
+// ==================================
+
+// 	 Non-uniform Scale Transformation 
+// Values: 0.000000, Pt(0.980000, -0.850000), Pt(-0.120000, 0.410000)
+// ==================================
+
+// 	 Non-uniform Scale Transformation 
+// Values: 0.000000, Pt(0.230000, 0.700000), Pt(0.000000, 0.000000)
+// ==================================
+
+// 	 Rotation Transformation 
+// Values: 294.000000, Pt(-0.780000, -0.270000), Pt(0.000000, 0.000000)
+// ==================================
+
+// 	 Non-uniform Scale Transformation 
+// Values: 0.000000, Pt(-0.280000, 0.440000), Pt(0.340000, 0.760000)
+// ==================================
+
+
+
+
+
+
+
+
+  //
+  // Rotation Transformation 
+  //   Values: 207.000000, Pt(0.480000, 0.740000), Pt(0.000000, 0.000000)
+  //   ==================================
+  
+  //   Rotation Transformation 
+  //   Values: 136.000000, Pt(-0.370000, -0.280000), Pt(0.000000, 0.000000)
+  //   ==================================
+
+  //   Non-uniform Scale Transformation 
+  //   Values: 0.000000, Pt(0.370000, -0.510000), Pt(-0.240000, -0.450000)
+  //   ==================================
+
+
+  //sick pentagon
+  // Non-uniform Scale Transformation 
+  //   Values: 0.000000, Pt(-0.020000, 0.360000), Pt(0.530000, 0.420000)
+  //   ==================================
+  float scale_N = .35;
+  iat.push_back(nscale(Pt(-0.020000, 0.360000 + scale_N), Pt(0.530000, 0.420000 ), 0.0));
+
+
+  //   Non-uniform Scale Transformation
+  //   Values: 0.000000, Pt(0.780000, -0.640000), Pt(-0.970000, 0.450000)
+  //   ==================================
+  iat.push_back(nscale(Pt(0.780000, -0.640000 + scale_N), Pt(-0.970000, 0.450000 ), 0.0));
+
+  //   Rotation Transformation 
+  //   Values: 65.000000, Pt(0.050000, -0.470000), Pt(0.000000, 0.000000)
+  //   ==================================
+  
+  iat.push_back(rotate(Pt(0.050000, -.47 + scale_N), 65));
+
+
+
+  //snake in water
+  // Rotation Transformation 
+  //   Values: 16.000000, Pt(0.620000, -0.270000), Pt(0.000000, 0.000000)
+  //   ==================================
+
+  //   Non-uniform Scale Transformation 
+  //   Values: 0.000000, Pt(0.740000, 0.510000), Pt(0.720000, -0.240000)
+  //   ==================================
+
+
+
+
+
+//cool boxes
+  // Rotation Transformation 
+  //   Values: 93.000000, Pt(-0.090000, -0.660000), Pt(0.000000, 0.000000)
+  //   ==================================
+
+  //   Non-uniform Scale Transformation 
+  //   Values: 0.000000, Pt(0.960000, 0.470000), Pt(-0.500000, -0.550000)
+  //   ==================================
+
+  //   Non-uniform Scale Transformation 
+  //   Values: 0.000000, Pt(-0.250000, -0.380000), Pt(-1.000000, -0.020000)
+  //   ==================================
+
+
+
+  //galaxies
+  // Rotation Transformation 
+  //   Values: 148.000000, Pt(-0.830000, -0.910000), Pt(0.000000, 0.000000)
+  //   ==================================
+
+  //   Non-uniform Scale Transformation 
+  //   Values: 0.000000, Pt(0.220000, 0.450000), Pt(0.300000, -0.080000)
+  //   ==================================
+
+  //   Rotation Transformation 
+  //   Values: 123.000000, Pt(-0.180000, -0.430000), Pt(0.000000, 0.000000)
+  //   ==================================
+
+
+
+  // crazy swirls:
+  //
+  // Rotation Transformation 
+  //   Values: 145.000000, Pt(-0.460000, 0.890000), Pt(0.000000, 0.000000)
+  //   ==================================
+
+  //   Non-uniform Scale Transformation 
+  //   Values: 0.000000, Pt(-0.120000, 0.900000), Pt(0.160000, 0.670000)
+  //   ==================================
+
+  //cool earth one
+  // Rotation Transformation 
+  //   Values: 327.000000, Pt(0.280000, 0.550000), Pt(0.000000, 0.000000)
+  //   ==================================
+
+  //   Rotation Transformation 
+  //   Values: 26.000000, Pt(0.400000, 0.040000), Pt(0.000000, 0.000000)
+  //   ==================================
+   setIATTransformations(iat);
+   vector<Pt> pts;
+   setCondensationSet (pts);
 }
 
 
@@ -343,7 +510,7 @@ void display ( void )
 
   fractal_set.push_back(initial_set);
 
-  static const int SHAPE_BOUND = 700000;
+  static const int SHAPE_BOUND = 1000000;
 
   const int DEPTH_BOUND = log(SHAPE_BOUND)  / log(IATTransformation.size() * fractal_set.size() * fractal_set[0].size());
 
@@ -432,6 +599,11 @@ void keyboard_event ( unsigned char key, int x, int y )
       myFractal2();
       break;
     }
+  case 'r' :
+    {
+      myRandomFractalGenerator();
+      break;
+    }
   case 'p' :
     {
       printCurrentFractal();
@@ -446,7 +618,7 @@ int main ( int argc, char** argv )
   srand((unsigned) time(0)); //seed for random vals later
   glutInit ( &argc, argv );
   glutInitDisplayMode ( GLUT_SINGLE | GLUT_RGB );
-  glutInitWindowSize ( 500, 500 );
+  glutInitWindowSize ( 1000, 1000 );
   glutInitWindowPosition ( 100, 100 );
   glutCreateWindow ( "Christopher Findeisen - Homework 3" );
   init ( );
