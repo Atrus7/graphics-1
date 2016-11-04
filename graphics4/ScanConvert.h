@@ -1,8 +1,8 @@
 #ifndef SCAN_CONVERT_H
 #define SCAN_CONVERT_H
 
-#define ImageW 400
-#define ImageH 400
+#define ImageW 500
+#define ImageH 500
 
 struct color {
 	float r, g, b;		// Color (R,G,B values)

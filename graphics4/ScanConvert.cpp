@@ -1,9 +1,14 @@
-#include <Windows.h>
+//#include <Windows.h>
 #include <GL/glut.h>
 #include <math.h>
 #include "ScanConvert.h"
 #include "PolygonDrawer.h"
 #include <vector>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -23,9 +28,18 @@ using namespace std;
 	You may add code to any of the subroutines here,  You probably
 		want to leave the drawit, clearFramebuffer, and
 		setFramebuffer commands alone, though.
+
+
+
+
+
+
+The scene itself will be specified with an ambient light amount of [.5, .5, .5] and an infinitely far away light source, which is emanating light in the [-1, -1, 1] direction and has an intensity of [1, 1, 1]. Finally, the object should have an ambient reflection coefficient of [.1, 0, 0], a diffuse reflection coefficient of [.7, 0, 0], a specular reflection coefficient of [.5, .5, .5] and a specular exponent of 5. 
+
   *****************************************************************/
 
 float framebuffer[ImageH][ImageW][3];
+vector<Polygon > polygons;
 
 // Draws the scene
 void drawit(void)
@@ -50,11 +64,9 @@ void clearFramebuffer()
 
 // Sets pixel x,y to the color RGB
 // I've made a small change to this function to make the pixels match
-// those returned by the glutMouseFunc exactly - Scott Schaefer 
+// those returned by the glutMouseFunc exactly
 void setFramebuffer(int x, int y, float R, float G, float B)
 {
-	// changes the origin from the lower-left corner to the upper-left corner
-	y = ImageH - 1 - y;
 	if (R<=1.0)
 		if (R>=0.0)
 			framebuffer[y][x][0]=R;
@@ -87,19 +99,22 @@ void init(void)
 {
 	clearFramebuffer();
 
-	// test clipping and drawing
-	vector<Pt> pts;
+  printf("have %d faces", polygons.size());
+  for(Polygon poly : polygons){
 
-	pts.push_back ( Pt ( 10, 10 ) );
-	pts.push_back ( Pt ( 10, 100 ) );
-	pts.push_back ( Pt ( 100, 200 ) );
-	pts.push_back ( Pt ( 200, 100 ) );
-	pts.push_back ( Pt ( 250, 100 ) );
-	pts.push_back ( Pt ( 300, 200 ) );
-	pts.push_back ( Pt ( 300, 10 ) );
+    //backface culling
+     float E_dot_N = dot(EYE_VECTOR, poly.normal);
+     if(E_dot_N > 0){
+       continue; // remove surface
+     }
 
-	drawPolygon ( pts );
+    for(Vertex pt : poly.getPoints()){
+      printf("Vertices:  %f, %f, %f \n", pt.x, pt.y, pt.z);
+    }
+    drawPolygon (poly);
+  }
 }
+
 
 void keyboard_event ( unsigned char key, int x, int y )
 {
@@ -109,19 +124,66 @@ void keyboard_event ( unsigned char key, int x, int y )
   }
   switch(key){
   case '1':{
-    // Flat Shading
+    shading = Flat;
     break;
   }
   case '2':{
-    // Gouraud Shading
+    shading = Gourand;
     break;
   }
   case '3':{
-    // Phong Shading
+    shading = Phong;
     break;
   }
-  default : cout << "Keyboard event not recognized";
+  default : cout << "Keyboard event not recognized" << endl;
   }
+}
+
+void readPolygonsFromFile(string file_name){
+  polygons.clear();
+  ifstream poly_objs(file_name);
+  string line;
+  char c;
+  vector<Vertex> *vert_list = new vector<Vertex>();
+  vert_list->push_back(Vertex()); // dummy at index 0, since vertices index at 1
+  while(getline(poly_objs, line)){
+    stringstream ss(line);
+    ss >> c;
+    switch(c){
+    case 'v':{
+      float f1, f2, f3;
+      ss >> f1 >> f2 >> f3;
+      vert_list->push_back(Vertex(f1, f2, f3));
+      printf("Vertices:  %f, %f, %f \n", f1, f2, f3);
+      break;
+    }
+    case 'f':{ // face
+      int i1, i2, i3;
+      ss >> i1 >> i2 >> i3;
+      printf("Face:  %f, %f, %f \n", vert_list->at(i1).x, vert_list->at(i2).x, vert_list->at(i3).x);
+      Polygon poly(&(vert_list->at(i1)), &(vert_list->at(i2)), &(vert_list->at(i3)));
+      // vert_list[i1].update_normal(poly.normal);
+      // vert_list[i2].update_normal(poly.normal);
+      // vert_list[i3].update_normal(poly.normal);
+      polygons.push_back(poly);
+      break;
+    }
+    case '#':{
+      break; // ignore, # indicates comment
+    }
+    }
+  }
+}
+
+/* do not modify the reshape function */
+void reshape ( int width, int height )
+{
+  glViewport ( 0, 0, width, height );
+  glMatrixMode ( GL_PROJECTION );
+  glLoadIdentity ( );
+  gluOrtho2D (-1, 1, -1, 1);
+  glMatrixMode ( GL_MODELVIEW );
+  glLoadIdentity ( );
 }
 
 
@@ -130,19 +192,18 @@ int main(int argc, char** argv)
   glutInit(&argc,argv);
   glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
   glutInitWindowSize(ImageW,ImageH);
-  glutInitWindowPosition(100,100);
+  glutInitWindowPosition(0,0);
   glutCreateWindow("Christopher Findeisen - Homework 4");
-  init();
     if(argc != 2){
       cout << "Error: Incorrect Usage. Program requires the following arguments:\n";
-      cout << "[initial filename] [goal filename]";
+      cout << "./prog [obj filename]";
       cout << argc << endl;
       return -1;
-    } 
+    }
   string obj_file = argv[1];
-  ifstream initial_input;
-  initial_input.open(initial_file, ios::in);
-  //BlocksWorld blocks_world(parse_for_blocks(initial_input), parse_for_blocks(goal_input));
+  readPolygonsFromFile(obj_file);
+  shading = Flat;
+  init();
   glutDisplayFunc(display);
   glutKeyboardFunc(keyboard_event);
   glutMainLoop();
