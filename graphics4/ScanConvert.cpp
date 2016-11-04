@@ -11,7 +11,6 @@
 #include <stdlib.h>
 
 using namespace std;
-
 /******************************************************************
 	Notes:
 	Image size is 400 by 400 by default.  You may adjust this if
@@ -40,6 +39,7 @@ The scene itself will be specified with an ambient light amount of [.5, .5, .5] 
 
 float framebuffer[ImageH][ImageW][3];
 vector<Polygon > polygons;
+SHADING shading = Flat;
 
 // Draws the scene
 void drawit(void)
@@ -99,7 +99,7 @@ void init(void)
 {
 	clearFramebuffer();
 
-  printf("have %d faces", polygons.size());
+  //printf("have %d faces", polygons.size());
   for(Polygon poly : polygons){
 
     //backface culling
@@ -109,7 +109,7 @@ void init(void)
      }
 
     for(Vertex pt : poly.getPoints()){
-      printf("Vertices:  %f, %f, %f \n", pt.x, pt.y, pt.z);
+      //printf("Vertices:  %f, %f, %f \n", pt.x, pt.y, pt.z);
     }
     drawPolygon (poly);
   }
@@ -137,6 +137,9 @@ void keyboard_event ( unsigned char key, int x, int y )
   }
   default : cout << "Keyboard event not recognized" << endl;
   }
+  init();
+  display();
+  glutPostRedisplay();
 }
 
 void readPolygonsFromFile(string file_name){
@@ -162,9 +165,9 @@ void readPolygonsFromFile(string file_name){
       ss >> i1 >> i2 >> i3;
       printf("Face:  %f, %f, %f \n", vert_list->at(i1).x, vert_list->at(i2).x, vert_list->at(i3).x);
       Polygon poly(&(vert_list->at(i1)), &(vert_list->at(i2)), &(vert_list->at(i3)));
-      // vert_list[i1].update_normal(poly.normal);
-      // vert_list[i2].update_normal(poly.normal);
-      // vert_list[i3].update_normal(poly.normal);
+      vert_list->at(i1).update_normal(poly.normal);
+      vert_list->at(i2).update_normal(poly.normal);
+      vert_list->at(i3).update_normal(poly.normal);
       polygons.push_back(poly);
       break;
     }

@@ -9,8 +9,8 @@
 
 using namespace std;
 
-static enum SHADING { Flat, Gourand, Phong } shading;
-
+enum SHADING { Flat, Gourand, Phong } ;
+extern SHADING shading;
  class Vertex
  {
  public:
@@ -27,7 +27,8 @@ static enum SHADING { Flat, Gourand, Phong } shading;
  		y = Y;
  		z = Z;
 
- 		averageNorm = new Vertex;
+ 		normal = new Vertex;
+ 		color = new Vertex;
  	}
 
  	inline void make_unit_vector() {
@@ -36,8 +37,10 @@ static enum SHADING { Flat, Gourand, Phong } shading;
  	}
  	inline Vertex& operator+=(const Vertex &v2);
 
- 	Vertex* averageNorm;
- 	int numNorms;
+ 	Vertex* normal;
+  Vertex* color;
+  int normal_avg_count;
+  void update_normal(Vertex face_normal);
  };
 
  inline Vertex operator+(const Vertex &v1, const Vertex &v2) {
@@ -112,33 +115,25 @@ public:
 		z = nZ;
   }
 
-  void update_normal(Vertex face_normal){
-    int old_avg_count = normal_avg_count;
-    ++normal_avg_count;
-
-    normal = ((normal * old_avg_count) + face_normal) / normal_avg_count;
-    normal.make_unit_vector();
-  }
-
 };
 
 class WinPt
 {
 public:
   int x, y, z;
-  //Vertex attr;
+  Vertex attr;
 
   WinPt ( void )
   {
     x = y = z = 0;
   }
 
-  WinPt ( int nX, int nY, int nZ)//, Vertex _attr)
+  WinPt ( int nX, int nY, int nZ, Vertex _attr)
   {
     x = nX;
     y = nY;
     z = nZ;
-    //attr = _attr;
+    attr = _attr;
   }
 };
 
@@ -156,7 +151,7 @@ struct Polygon {
   static WinPt calculatePointToWindow(const Vertex &point){
     const float coord_size = 2;
     //Convert coords to window.
-    printf("Converted %f, %f ", point.x, point.y);
+    //printf("Converted %f, %f ", point.x, point.y);
     //shift coords over by 1, since screen is not centered at 0
     float x = point.x + 1;
     float y = point.y + 1;
@@ -166,9 +161,16 @@ struct Polygon {
 
     int x2 = round(x / x_per_pixel);
     int y2 = round(y / y_per_pixel);
-    WinPt window_point(x2, y2, point.z);
+    Vertex attr;
+    if(shading == Phong){
+      attr = *point.normal;
+    }
+    else if(shading == Gourand){
+      attr = *point.color;
+    }
+    WinPt window_point(x2, y2, point.z, attr);
 
-    printf("to %d, %d \n", x2, y2);
+    //printf("to %d, %d \n", x2, y2);
     return window_point;
   }
   vector<WinPt> getWindowPoints(){

@@ -30,6 +30,12 @@ public:
 vector<vector<Edge> > activeEdgeTable;
 vector<Edge> activeEdgeList;
 
+void Vertex::update_normal(Vertex face_normal){
+  int old_avg_count = normal_avg_count;
+  ++normal_avg_count;
+  *normal = ((*normal * old_avg_count) + face_normal) / normal_avg_count;
+}
+
 void buildActiveEdgeTable ( vector<WinPt> &points )
 {
 	int i;
@@ -56,23 +62,18 @@ void buildActiveEdgeTable ( vector<WinPt> &points )
 		}
 		e.maxY = max ( points [ i ].y, points [ next ].y );
 		e.slopeRecip = ( points [ i ].x - points [ next ].x ) / (float)( points [ i ].y - points [ next ].y );
-
-		//int min_point = (points[i].y < points[next].y)? i: next;
-    //int max_point = (min_point == i)? next : i;
-
-    //e.fIncr = (points[min_point].attr - points[max_point].attr) / (e.maxY - points[min_point].y);
+    e.fIncr = (points[i].attr - points[next].attr) / (points[i].y - points[next].y);
 
 		if ( points [ i ].y == e.maxY )
 		{
 			e.currentX = points [ next ].x;
-
-      //e.currentF = points[next].attr;
+      e.currentF = points[next].attr;
 
 			activeEdgeTable [ points [ next ].y ].push_back ( e );
 		}
 		else
 		{
-      //e.currentF = points[i].attr;
+      e.currentF = points[i].attr;
 			e.currentX = points [ i ].x;
 			activeEdgeTable [ points [ i ].y ].push_back ( e );
 		}
@@ -101,14 +102,13 @@ Vertex light(Vertex normal){
 // assumes all vertices are within window!!!
 void drawPolygon ( Polygon poly )
 {
-  //Gourand
-  //for(Pt * pt : poly.points){
-  //}
-  //pt->color = light(Pt(pt->normal[0], pt->normal[1], pt->normal[2] ));
+  if(shading == Gourand){
+    for(Vertex pt : poly.getPoints()){
+      pt.normal->make_unit_vector();
+      *pt.color = light(*pt.normal);
+    }
+  }
 
-  //poly.points[0]->color = Vertex(1, 0, 0);
-  //poly.points[1]->color = Vertex(0, 1, 0);
-  //poly.points[2]->color = Vertex(0, 0, 2);
   printf("\n\nNormal:  %f, %f, %f\n",poly.normal.x, poly.normal.y, poly.normal.z);
 
   int x, y, i;
@@ -140,21 +140,27 @@ void drawPolygon ( Polygon poly )
       // draw scan line
       for ( i = 0; i < activeEdgeList.size ( ); i += 2 )
         {
+          Vertex F = activeEdgeList[i].currentF;
+          Vertex dF = (activeEdgeList[i+1].currentF - activeEdgeList[i].currentF) / (activeEdgeList[i+1].currentX - activeEdgeList[i].currentX);
 
-          //Vertex F;
-          //F = activeEdgeList[i].currentF;
-          //Vertex dF;
-          //dF = (activeEdgeList[1].currentF - activeEdgeList[0].currentF) / (activeEdgeList[1].currentX - activeEdgeList[0].currentX);
-
-          for ( x = (int)ceil ( activeEdgeList [ i ].currentX ); x < activeEdgeList [ i + 1 ].currentX; x++ )
-            {
-              //F = F + dF;
+          for ( x = (int)ceil ( activeEdgeList [ i ].currentX ); x < activeEdgeList [ i + 1 ].currentX; x++ ) {
               Vertex color(1,1,1);
-              //if Phong or flat
-              if(shading == Flat){
+              if(shading == Gourand){
+                color = F;
+              }
+
+              else if(shading == Phong){
+                Vertex fNormal = F;
+                fNormal.make_unit_vector();
+                color = light(fNormal);
+              }
+
+              else if(shading == Flat){
                  color = light(poly.normal);
               }
+
               setFramebuffer ( x, y, color.x, color.y, color.z);
+              F = F + dF;
             }
         }
 
@@ -162,8 +168,7 @@ void drawPolygon ( Polygon poly )
       for ( i = 0; i < activeEdgeList.size ( ); i++ )
         {
           activeEdgeList [ i ].currentX += activeEdgeList [ i ].slopeRecip;
-
-          //activeEdgeList [ i ].currentF = activeEdgeList[i].currentF + activeEdgeList[i].fIncr;
+          activeEdgeList [ i ].currentF = activeEdgeList[i].currentF + activeEdgeList[i].fIncr;
         }
     }
 }
