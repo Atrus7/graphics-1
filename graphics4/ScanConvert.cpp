@@ -4,6 +4,7 @@
 #include "ScanConvert.h"
 #include "PolygonDrawer.h"
 #include <vector>
+#include <limits>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -37,7 +38,7 @@ The scene itself will be specified with an ambient light amount of [.5, .5, .5] 
 
   *****************************************************************/
 
-float framebuffer[ImageH][ImageW][3];
+float framebuffer[ImageH][ImageW][4];
 vector<Polygon > polygons;
 SHADING shading = Flat;
 
@@ -58,6 +59,7 @@ void clearFramebuffer()
 			framebuffer[i][j][0] = 0.0;
 			framebuffer[i][j][1] = 0.0;
 			framebuffer[i][j][2] = 0.0;
+			framebuffer[i][j][3] = numeric_limits::min();
 		}
 	}
 }
@@ -65,8 +67,11 @@ void clearFramebuffer()
 // Sets pixel x,y to the color RGB
 // I've made a small change to this function to make the pixels match
 // those returned by the glutMouseFunc exactly
-void setFramebuffer(int x, int y, float R, float G, float B)
+void setFramebuffer(int x, int y, float z, float R, float G, float B)
 {
+  if(z < framebuffer[y][x][3]){ // zbuffer rejection
+    return; //don't draw.
+  }
 	if (R<=1.0)
 		if (R>=0.0)
 			framebuffer[y][x][0]=R;
@@ -88,6 +93,8 @@ void setFramebuffer(int x, int y, float R, float G, float B)
 			framebuffer[y][x][2]=0.0;
 	else
 		framebuffer[y][x][2]=1.0;
+
+  framebuffer[y][x][3] = z;
 }
 
 void display(void)
