@@ -11,8 +11,10 @@ public:
 	float slopeRecip;
 	float maxY;
 	float currentX;
+	float currentZ;
   Vertex currentF;
   Vertex fIncr;
+  float zIncr;
 
 	bool operator < ( const Edge &e )
 	{
@@ -63,10 +65,12 @@ void buildActiveEdgeTable ( vector<WinPt> &points )
 		e.maxY = max ( points [ i ].y, points [ next ].y );
 		e.slopeRecip = ( points [ i ].x - points [ next ].x ) / (float)( points [ i ].y - points [ next ].y );
     e.fIncr = (points[i].attr - points[next].attr) / (points[i].y - points[next].y);
+    e.zIncr = (points[i].z - points[next].z) / (points[i].y - points[next].y);
 
 		if ( points [ i ].y == e.maxY )
 		{
 			e.currentX = points [ next ].x;
+			e.currentZ = points [ next ].z;
       e.currentF = points[next].attr;
 
 			activeEdgeTable [ points [ next ].y ].push_back ( e );
@@ -75,6 +79,7 @@ void buildActiveEdgeTable ( vector<WinPt> &points )
 		{
       e.currentF = points[i].attr;
 			e.currentX = points [ i ].x;
+			e.currentZ = points [ i ].z;
 			activeEdgeTable [ points [ i ].y ].push_back ( e );
 		}
 	}
@@ -140,8 +145,11 @@ void drawPolygon ( Polygon poly )
       // draw scan line
       for ( i = 0; i < activeEdgeList.size ( ); i += 2 )
         {
-          Vertex F = activeEdgeList[i].currentF;
+          float Z = activeEdgeList[i].currentZ;
+          float dZ = (activeEdgeList[i+1].currentZ - activeEdgeList[i].currentZ) / (activeEdgeList[i+1].currentX - activeEdgeList[i].currentX);
+
           Vertex dF = (activeEdgeList[i+1].currentF - activeEdgeList[i].currentF) / (activeEdgeList[i+1].currentX - activeEdgeList[i].currentX);
+          Vertex F = activeEdgeList[i].currentF;
 
           for ( x = (int)ceil ( activeEdgeList [ i ].currentX ); x < activeEdgeList [ i + 1 ].currentX; x++ ) {
               Vertex color(1,1,1);
@@ -159,8 +167,9 @@ void drawPolygon ( Polygon poly )
                  color = light(poly.normal);
               }
 
-              setFramebuffer ( x, y, color.x, color.y, color.z);
+              setFramebuffer ( x, y, Z, color.x, color.y, color.z);
               F = F + dF;
+              Z = Z + dZ;
             }
         }
 
@@ -169,6 +178,7 @@ void drawPolygon ( Polygon poly )
         {
           activeEdgeList [ i ].currentX += activeEdgeList [ i ].slopeRecip;
           activeEdgeList [ i ].currentF = activeEdgeList[i].currentF + activeEdgeList[i].fIncr;
+          activeEdgeList [ i ].currentZ = activeEdgeList[i].currentZ + activeEdgeList[i].zIncr;
         }
     }
 }
