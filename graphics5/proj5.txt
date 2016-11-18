@@ -1,0 +1,40 @@
+Assignment 5: Ray Tracing [150 points]
+
+Due 11/18/16
+
+Purpose:
+This assignment will expose you to non-realtime rendering methods. In particular, you will implement more complex lighting effects such as shadows and reflections.
+
+Description:
+In this assignment you will implement a simple raytracer. You should be able to ray trace three types of shapes: infinite planes, spheres and infinite cylinders. Furthermore, these shapes may have a single transformation or multiple transformations associated with them. Your ray tracer should implement recursive ray tracing and be able to display shadows as well as reflections. You should also be able to handle surfaces with different ambient, diffuse and specular reflection coefficients in the same scene. You do not have to implement refraction for this assignment.
+
+Instead of implementing a parser to read in a scene description, you will build your own scenes. When the user presses keys 1-4, your program should display different scenes which you will construct. However, these scenes must have specific objects in them and should be designed to showcase the desired effects and make them easy to see.
+
+Unlike the previous assignment, you will be expected to have a finite (as opposed to infinite) viewer in all scenes as well as finit point light sources in all scenes. This means that you will need to recompute the direction to the light, L, and the direction to the viewer, V, each time you evaluate the lighting equation.
+
+Scene 1: at least one sphere and one ellipsoid with an infinite plane. Each object should have different ambient, diffuse, specular reflection coefficients. There should also be two different white lights. You should be able to see shadows and the shadow of one sphere/ellipsoid should be on part of the other sphere/ellipsoid.
+Scene 2: this scene should contain at least one infinite plane, sphere and cylinder showing all three different kinds of objects.
+Scene 3: this scene should illustrate reflection. At least one object must be reflective and at least one of the reflective objects must be curved.
+Scene 4: display anything you wish, but points will be given for creativity and complexity. You may implement other primitives (polygon, csg) if you wish; however, interesting objects can be built with an infinite plane and lots of spheres.
+
+Grading:
+[20] Correct objects in scene 1 each will different reflection coefficients
+[20] Correct lighting equation with multiple lights in scene 1
+[20] Shadows displayed correctly in scene 1
+[30] Correct intersection and display of objects in scene 2
+[40] Reflections displayed correctly with lighting in scene 3
+[20] scene 4, graded on complexity and creativity
+
+
+Honors
+
+For honors students, you will be implementing the same raytracer. However, I would like you to also implement refraction. At least one of your scenes needs to include a transparent object illustrating that refraction is implemented properly (bending of light).
+
+Grading:
+[20] Correct objects in scene 1 each will different reflection coefficients
+[20] Correct lighting equation with multiple lights in scene 1
+[20] Shadows displayed correctly in scene 1
+[20] Correct intersection and display of objects in scene 2
+[30] Reflections displayed correctly with lighting in scene 3
+[20] At least one scene shows a refractive object displayed correctly
+[20] scene 4, graded on complexity and creativity
