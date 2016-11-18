@@ -1,15 +1,12 @@
 #ifndef RAY_TRACER_H
 #define RAY_TRACER_H
 
-#define ImageW 500
-#define ImageH 500
 #include "vertex.h"
 #include "scene.h"
 
 struct color {
 	float r, g, b;		// Color (R,G,B values)
 };
-const Vertex EYE_POINT = Vertex(ImageW/2,ImageW/2,-100); //eye pos is center of screen
 
 
 //const Vertex VIEWPORT_BL = (0,0,-10);//bottom left

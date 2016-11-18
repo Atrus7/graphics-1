@@ -21,9 +21,7 @@ struct IShape {
   virtual Vertex get_normal(Vertex point)=0;
 };
 
-static Vertex get_reflected_vector(Vertex L, Vertex N){
-  return 2 * (dot(L, N)) * (N-L);
-}
+Vertex orthogonal_projection(Vertex p, Vertex o, Vertex v);
 
 class IPlane: public IShape{
   Vertex normal;
@@ -41,6 +39,16 @@ public:
   Vertex get_intersection(Vertex p, Vertex v);
   Vertex get_normal(Vertex point);
   ISphere(SurfaceProperties sp, float r, Vertex c): IShape(sp), radius(r), center(c){}
+};
+
+class ICylinder: public IShape{
+  float radius;
+  Vertex center;
+  Vertex axis;
+public:
+  Vertex get_intersection(Vertex p, Vertex v);
+  Vertex get_normal(Vertex point);
+  ICylinder(SurfaceProperties sp, float r, Vertex c, Vertex a): IShape(sp), radius(r), center(c), axis(a){}
 };
 
 #endif /* ISHAPES_H */

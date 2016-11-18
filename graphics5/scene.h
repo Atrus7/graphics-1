@@ -5,6 +5,10 @@
 #include "lighting.h"
 #include "i_shape.h"
 
+#define ImageW 500
+#define ImageH 500
+const Vertex EYE_POINT = Vertex(ImageW/2,ImageW/2,-400); //eye pos is center of screen
+
 const int MAX_RAY_RECURSION = 4;
 
 class Scene
@@ -23,6 +27,8 @@ public:
   //casts shadow ray and determines if the light will affect this shape
   bool in_shadow(Light l, Vertex p);
 };
+
+Vertex new_starting_ray_offset_error_mod(Vertex original, Vertex normal);
 
 // Some pre-built scenes
 /* Scene 1: at least one sphere and one ellipsoid with an infinite plane. Each object should have different ambient, diffuse, specular

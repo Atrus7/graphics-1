@@ -24,6 +24,9 @@
  		float k = 1.0 / sqrt(x * x + y * y + z * z);
  		x *= k; y *= k; z *= k;
  	}
+   inline float get_magnitude() {
+     return sqrt(x * x + y * y + z * z);
+   }
 
    inline Vertex get_unit_vector() const {
      float k = 1.0 / sqrt(x * x + y * y + z * z);
