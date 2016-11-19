@@ -88,5 +88,17 @@ inline bool operator!=(const Vertex &v1, const Vertex &v2) {
  		(-(v1.x * v2.z - v1.z * v2.x)),
  		(v1.x * v2.y - v1.y * v2.x));
  }
+inline Vertex inverse(const Vertex &v1){
+  // computes the inverse of a matrix m
+  double d = v1.x * v1.y * v1.z;
+  double inverse_d = 1 / d;
+
+  Vertex inverse_v1; // inverse of matrix m
+  inverse_v1.x = (v1.y * v1.z) * inverse_d;
+  inverse_v1.y = (v1.x * v1.z) * inverse_d;
+  inverse_v1.z = (v1.x * v1.y) * inverse_d;
+  return inverse_v1;
+}
+
 
 #endif /* VERTEX_H */

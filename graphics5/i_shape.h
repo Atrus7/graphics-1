@@ -5,20 +5,34 @@
 #include <cmath>
 using namespace std;
 
+//A vertex that will be used to as a "NULL" indicator of invalid return
 const Vertex INVALID_INTERSECT = {-999, -999, -999};
-
+const Vertex INVALID_DEFORMATION = {0,0,0};
+/*
+  Assume D(x,y,z) is simple… a matrix
+  First deform line L(t) by inverse of D
+  Calculate intersection with undeformed surface S
+  Transform intersection point and normal by D
+ */
 
 struct IShape {
   SurfaceProperties surface_properties;
-  //A vertex that will be used to as a "NULL" indicator of invalid return
   //Since this should not be a correct intersection (behind the eye) / off screen.
+  Vertex deformation = INVALID_DEFORMATION;
+  Vertex inverse_deformation = INVALID_DEFORMATION;
 
   IShape(SurfaceProperties sp): surface_properties(sp){}
+
+  void add_deformation(Vertex d){
+    deformation = d;
+    inverse_deformation = inverse(d);
+  }
 
   //returns closest point of intersection
   virtual Vertex get_intersection(Vertex p, Vertex v)=0;
   //returns the normal vector
   virtual Vertex get_normal(Vertex point)=0;
+  //transform_L_t()
 };
 
 Vertex orthogonal_projection(Vertex p, Vertex o, Vertex v);

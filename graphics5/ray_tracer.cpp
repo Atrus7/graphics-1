@@ -77,6 +77,7 @@ void display(void)
 
 
 void ray_trace(Scene scene){
+  clearFramebuffer();
   for (int x = 0; x < ImageW; ++x) {
     for (int y = 0; y < ImageH; ++y) {
       Vertex color_at_point = scene.ray_trace_recursive(EYE_POINT, eye_vector_to_pixel(x,y));
@@ -87,8 +88,6 @@ void ray_trace(Scene scene){
 
 void init(void)
 {
-	clearFramebuffer();
-  ray_trace(scene_1());
 }
 
 void keyboard_event ( unsigned char key, int x, int y )
@@ -99,20 +98,24 @@ void keyboard_event ( unsigned char key, int x, int y )
   }
   switch(key){
   case '1':{
+    ray_trace(scene_1());
     break;
   }
   case '2':{
+    ray_trace(scene_2());
     break;
   }
   case '3':{
+    ray_trace(scene_3());
     break;
   }
   case '4':{
+    ray_trace(scene_4());
     break;
   }
   default : cout << "Keyboard event not recognized" << endl;
+    return;
   }
-  init();
   display();
   glutPostRedisplay();
 }
@@ -135,7 +138,7 @@ int main(int argc, char** argv)
   glutInitWindowSize(ImageW,ImageH);
   glutInitWindowPosition(0,0);
   glutCreateWindow("Christopher Findeisen - Homework 5");
-  init();
+  ray_trace(scene_1());
   glutDisplayFunc(display);
   glutKeyboardFunc(keyboard_event);
   glutMainLoop();
